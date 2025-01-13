@@ -3,18 +3,18 @@ using Jakkapat.StateMachine.Core;
 namespace Jakkapat.StateMachine.Example
 {
     public class ApproachIdleSubState
-        : BaseState<NPCContext, StateIDs>
+        : BaseState<NpcContext, StateIDs>
     {
         public override StateIDs ID => StateIDs.ApproachIdle;
 
-        private readonly StateMachine<NPCContext, StateIDs> _machine;
+        private readonly StateMachine<NpcContext, StateIDs> _machine;
 
-        public ApproachIdleSubState(StateMachine<NPCContext, StateIDs> machine)
+        public ApproachIdleSubState(StateMachine<NpcContext, StateIDs> machine)
         {
             _machine = machine;
         }
 
-        public override void UpdateState(NPCContext context)
+        public override void UpdateState(NpcContext context)
         {
             if (context.IsTargetInRange())
             {

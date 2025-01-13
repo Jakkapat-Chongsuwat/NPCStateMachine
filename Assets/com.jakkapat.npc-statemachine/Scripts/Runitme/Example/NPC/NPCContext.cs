@@ -1,11 +1,15 @@
+using Jakkapat.StateMachine.Core;
+using UnityEngine;
+using UnityEngine.AI;
+
 namespace Jakkapat.StateMachine.Example
 {
-    using Jakkapat.StateMachine.Core;
-    using UnityEngine;
-    using UnityEngine.AI;
-
-    public class NPCContext :
-        IContextMachine<NPCContext, NPCStates>,
+    /// <summary>
+    /// Inherits from BaseContext (which is now a normal class),
+    /// plus implements the various interfaces (IAgentMovement, etc.).
+    /// </summary>
+    public class NpcContext : BaseContext,
+        IContextMachine<NpcContext, NpcStates>,
         IAgentMovement,
         ITargetable,
         IRotatable,
@@ -13,34 +17,36 @@ namespace Jakkapat.StateMachine.Example
         ICanGreet,
         IApproachable
     {
-        // The machine we store
-        public StateMachine<NPCContext, NPCStates> StateMachine { get; private set; }
+        // 1) The strongly-typed state machine reference:
+        private StateMachine<NpcContext, NpcStates> _machine;
+        public StateMachine<NpcContext, NpcStates> StateMachine => _machine;
 
-        // Public references
+        // Optionally let external code set the machine if needed:
+        public void SetStateMachine(StateMachine<NpcContext, NpcStates> machine)
+        {
+            _machine = machine;
+        }
+
+        // 2) References we want to store:
         public NavMeshAgent Agent { get; set; }
         public Transform SelfTransform { get; set; }
         public Transform Target { get; set; }
-
-        // Additional ref if needed
         public AnimationController animationController { get; set; }
 
-        // Movement / approach settings
+        // 3) Additional config:
         public float TurnSpeed { get; set; } = 3f;
         public float ApproachRange { get; set; } = 3f;
 
-        // Approach flags
+        // 4) Approach flags:
         public bool HasApproached { get; set; }
         public bool HasGreeted { get; set; }
 
-        public float CurrentSpeed => 0f;
+        // 5) For demonstration, let's assume this is your "current speed" logic:
+        public float CurrentSpeed => Agent ? Agent.velocity.magnitude : 0f;
 
-        // Constructor: we create a new machine
-        public NPCContext()
-        {
-            StateMachine = new StateMachine<NPCContext, NPCStates>(this);
-        }
-
-        // IAgentMovement
+        // -------------------------------------------------------------
+        //  IAgentMovement
+        // -------------------------------------------------------------
         public void StopMovement()
         {
             if (Agent)
@@ -57,7 +63,16 @@ namespace Jakkapat.StateMachine.Example
             return Agent.remainingDistance <= tolerance;
         }
 
-        // ITargetable
+        public void SetDestination(Vector3 position)
+        {
+            if (!Agent) return;
+            Agent.isStopped = false;
+            Agent.SetDestination(position);
+        }
+
+        // -------------------------------------------------------------
+        //  ITargetable
+        // -------------------------------------------------------------
         public bool IsTargetInRange()
         {
             if (!SelfTransform || !Target) return false;
@@ -65,7 +80,9 @@ namespace Jakkapat.StateMachine.Example
             return dist <= ApproachRange;
         }
 
-        // IRotatable
+        // -------------------------------------------------------------
+        //  IRotatable
+        // -------------------------------------------------------------
         public void RotateToFaceTarget()
         {
             if (!SelfTransform || !Target) return;
@@ -96,7 +113,9 @@ namespace Jakkapat.StateMachine.Example
             );
         }
 
-        // IApproachable
+        // -------------------------------------------------------------
+        //  IApproachable
+        // -------------------------------------------------------------
         public bool IsPlayerApproachFromBehind()
         {
             if (!SelfTransform || !Target) return false;
@@ -105,10 +124,12 @@ namespace Jakkapat.StateMachine.Example
             toPlayer.y = 0f;
             toPlayer.Normalize();
             float dot = Vector3.Dot(forward, toPlayer);
-            return dot < 0f;
+            return (dot < 0f);
         }
 
-        // ICanSurprise, ICanGreet
+        // -------------------------------------------------------------
+        //  ICanSurprise, ICanGreet
+        // -------------------------------------------------------------
         public void PlaySurpriseAnimation()
         {
             animationController?.SetSurprise();
@@ -119,22 +140,17 @@ namespace Jakkapat.StateMachine.Example
             animationController?.SetGreeting();
         }
 
-        // Optional: update logic each frame if you wish
+        // -------------------------------------------------------------
+        //  Optional: per-frame logic
+        // -------------------------------------------------------------
         public void UpdateContext()
         {
-            // If out of range => reset approach flags
+            // e.g. if out of range => reset approach flags
             if (!IsTargetInRange())
             {
                 HasApproached = false;
                 HasGreeted = false;
             }
-        }
-
-        public void SetDestination(Vector3 position)
-        {
-            if (!Agent) return;
-            Agent.isStopped = false;
-            Agent.SetDestination(position);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Jakkapat.StateMachine.Example
 
         public override StateKey OnEnter(BaseContext context, StateKey fromKey)
         {
-            if (context is NPCContext npc && npc.Agent)
+            if (context is NpcContext npc && npc.Agent)
             {
                 npc.Agent.isStopped = false;
                 Vector3 roamTarget = GetRandomRoamPosition(npc.selfTransform.position, roamRadius);
@@ -25,7 +25,7 @@ namespace Jakkapat.StateMachine.Example
 
         public override StateKey OnUpdate(BaseContext context)
         {
-            if (!(context is NPCContext npc)) return this.key;
+            if (!(context is NpcContext npc)) return this.key;
 
             // if player out-of-range => npc.HasApproached = false
             if (!npc.IsTargetInRange())

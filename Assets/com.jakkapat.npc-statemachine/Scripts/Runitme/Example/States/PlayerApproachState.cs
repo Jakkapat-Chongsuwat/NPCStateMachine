@@ -1,41 +1,72 @@
+using System;
 using Jakkapat.StateMachine.Core;
+using UnityEngine;
 
 namespace Jakkapat.StateMachine.Example
 {
-    public class PlayerApproachState
-        : NestableBaseState<BaseContext, StateIDs, BaseContext, StateIDs>
+    /// <summary>
+    /// A generic PlayerApproachState that can work with 
+    /// any TContext + TStateID, provided TContext implements 
+    /// the needed interfaces.
+    /// 
+    /// We also nest a sub-state machine of the *same* TContext & TStateID.
+    /// </summary>
+    public class PlayerApproachState<TContext, TStateID>
+        : NestableBaseState<TContext, TStateID, TContext, TStateID>
+        where TContext : class,
+                        IContextMachine<TContext, TStateID>,
+                        ITargetable,
+                        IApproachable,
+                        IRotatable,
+                        ICanSurprise,
+                        ICanGreet,
+                        IAgentMovement
+        where TStateID : struct, Enum
     {
-        public override StateIDs ID => StateIDs.PlayerApproach;
+        private readonly TStateID _id;
+        private readonly TStateID _roamingStateID;
 
-        protected override StateMachine<BaseContext, StateIDs> CreateSubMachine(BaseContext parentContext)
+        public PlayerApproachState(TStateID id, TStateID roamingID)
         {
-            var subMachine = new StateMachine<BaseContext, StateIDs>(parentContext);
+            _id = id;
+            _roamingStateID = roamingID;
+        }
 
-            subMachine.AddState(new ApproachInitialSubState(subMachine));
-            subMachine.AddState(new ApproachSurpriseSubState(subMachine));
-            subMachine.AddState(new ApproachGreetingSubState(subMachine));
-            subMachine.AddState(new ApproachIdleSubState(subMachine));
+        public override TStateID ID => _id;
+
+        protected override StateMachine<TContext, TStateID> CreateSubMachine(TContext parentContext)
+        {
+            var subMachine = new StateMachine<TContext, TStateID>(parentContext);
+
+            // Add sub-states also typed for <TContext,TStateID>
+            subMachine.AddState(new ApproachInitialSubState<TContext, TStateID>(subMachine));
+            subMachine.AddState(new ApproachSurpriseSubState<TContext, TStateID>(subMachine));
+            subMachine.AddState(new ApproachGreetingSubState<TContext, TStateID>(subMachine));
+            subMachine.AddState(new ApproachIdleSubState<TContext, TStateID>(subMachine));
 
             return subMachine;
         }
 
-        protected override void InitializeSubMachine(NPCContext parentContext)
+        protected override void InitializeSubMachine(TContext parentContext)
         {
-            SubMachine.ChangeState(StateIDs.ApproachInitial);
+            // Start sub-state => e.g. "ApproachInitial"
+            SubMachine.ChangeState(parentContext.ApproachInitialStateID);
+            // or use any TStateID you prefer
         }
 
-        public override void EnterState(NPCContext context, StateIDs fromState)
+        public override void EnterState(TContext context, TStateID fromState)
         {
             context.StopMovement();
             base.EnterState(context, fromState);
         }
 
-        public override void UpdateState(NPCContext context)
+        public override void UpdateState(TContext context)
         {
+            // If out of range => go back to e.g. "Roaming"
             if (!context.IsTargetInRange())
             {
                 context.HasApproached = false;
-                context.StateMachine.ChangeState(StateIDs.Roaming);
+                context.StateMachine.ChangeState(_roamingStateID);
                 return;
             }
             base.UpdateState(context);

@@ -1,63 +1,108 @@
 using UnityEngine;
-using Jakkapat.StateMachine.Core;
+using System;
+using Jakkapat.StateMachine.Example;
 
-namespace Jakkapat.StateMachine.Example
+namespace Jakkapat.StateMachine.Core
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/SurpriseState", fileName = "SurpriseState")]
-    public class SurpriseState : ScriptableState
+    /// <summary>
+    /// A generic SurpriseState that:
+    /// 1. Requires the context to implement IApproachable, IRotatable, ITargetable, ICanSurprise,
+    ///    and IContextMachine for transitions.
+    /// 2. On Enter, sets HasApproached to true and plays a surprise animation.
+    /// 3. On Update, does a partial rotation for a certain time, then fully faces the target,
+    ///    and eventually transitions to a 'greeting' state ID.
+    /// </summary>
+    /// <typeparam name="TContext">
+    /// A class that implements 
+    ///   IApproachable, IRotatable, ITargetable, ICanSurprise, 
+    ///   and IContextMachine (so we can transition states).
+    /// </typeparam>
+    /// <typeparam name="TStateID">
+    /// An enum (or struct with 'Enum' constraint) representing state IDs.
+    /// </typeparam>
+    public class SurpriseState<TContext, TStateID>
+        : BaseState<TContext, TStateID>
+        where TContext : class,
+                        IApproachable,
+                        IRotatable,
+                        ITargetable,
+                        ICanSurprise,
+                        ICanGreet, /* if you also want to call context.PlayGreetingAnimation() */
+                        IContextMachine<TContext, TStateID>
+        where TStateID : struct, Enum
     {
-        [Header("Duration of surprise (seconds)")]
-        public float surpriseDuration = 1.5f;
+        private readonly TStateID _id;         // The ID of this SurpriseState
+        private readonly TStateID _greetingID; // The state ID to go to after surprise finishes
 
-        [Header("Time to do partial rotation (seconds)")]
-        public float partialRotationTime = 1.0f;
+        // How long we remain in "surprise" state total
+        public float SurpriseDuration { get; set; }
 
-        [Header("State to go after surprise finishes (e.g. Greeting)")]
-        public StateKey greetingKey;
+        // How many seconds we do partial rotation (50%) before fully facing the target
+        public float PartialRotationTime { get; set; }
 
-        private float _timer;
+        private float _timer = 0f;
 
-        public override StateKey OnEnter(BaseContext context, StateKey fromKey)
+        public SurpriseState(
+            TStateID stateID,
+            TStateID greetingID,
+            float surpriseDuration = 1.5f,
+            float partialRotationTime = 1.0f)
+        {
+            _id = stateID;
+            _greetingID = greetingID;
+            SurpriseDuration = surpriseDuration;
+            PartialRotationTime = partialRotationTime;
+        }
+
+        public override TStateID ID => _id;
+
+        public override void EnterState(TContext context, TStateID fromState)
         {
             _timer = 0f;
 
-            if (context is NPCContext npc)
-            {
-                npc.HasApproached = true;
-                npc.PlaySurpriseAnimation();
-            }
+            // Mark approached
+            context.HasApproached = true;
 
-            return this.key;
+            // Start the surprise animation
+            context.PlaySurpriseAnimation();
         }
 
-        public override StateKey OnUpdate(BaseContext context)
+        public override void UpdateState(TContext context)
         {
-            if (!(context is NPCContext npc)) return this.key;
-
             _timer += Time.deltaTime;
 
-            if (npc.IsTargetInRange())
+            // If the NPC can see the player or is in range
+            if (context.IsTargetInRange())
             {
-                if (_timer < partialRotationTime)
+                if (_timer < PartialRotationTime)
                 {
-                    npc.RotateToTargetFraction(0.5f);
+                    // Only partially rotate (e.g. 50% fraction)
+                    context.RotateToTargetFraction(0.5f);
                 }
                 else
                 {
-                    npc.RotateToFaceTarget();
+                    // Now fully face the player
+                    context.RotateToFaceTarget();
                 }
             }
 
-            if (_timer >= surpriseDuration)
+            // Once we've spent enough time in surprise, transition to greeting
+            if (_timer >= SurpriseDuration)
             {
-                // Transition to greetingKey
-                if (greetingKey != null)
-                {
-                    ChangeState(greetingKey);
-                }
-            }
+                // Optionally fully face before greeting
+                context.RotateToFaceTarget();
 
-            return this.key;
+                // If your context also implements ICanGreet, you can call:
+                context.PlayGreetingAnimation();
+
+                // Then do the actual state transition
+                context.StateMachine.ChangeState(_greetingID);
+            }
+        }
+
+        public override void ExitState(TContext context, TStateID toState)
+        {
+            // Optional: any cleanup if needed
         }
     }
 }

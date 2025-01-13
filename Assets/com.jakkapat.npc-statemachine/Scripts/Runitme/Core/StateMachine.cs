@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace Jakkapat.StateMachine.Core
 {
     /// <summary>
-    /// A strongly-typed state machine that uses TStateEnum
-    /// for the ID. Each module can define its own TStateEnum.
+    /// A strongly-typed state machine that uses (TContext, TStateEnum).
+    /// TStateEnum must be an enum or struct with Enum constraint.
     /// </summary>
     public class StateMachine<TContext, TStateEnum>
         where TStateEnum : struct, Enum
@@ -18,7 +18,17 @@ namespace Jakkapat.StateMachine.Core
         public TContext Context { get; set; }
         public TStateEnum CurrentStateID { get; protected set; }
 
-        public StateMachine() { }
+        /// <summary>
+        /// Parameterless constructor (you can set .Context after creation).
+        /// </summary>
+        public StateMachine()
+        {
+            // no-op
+        }
+
+        /// <summary>
+        /// Optional convenience constructor that sets the context immediately.
+        /// </summary>
         public StateMachine(TContext context)
         {
             Context = context;
@@ -35,8 +45,11 @@ namespace Jakkapat.StateMachine.Core
         public virtual void ChangeState(TStateEnum newStateID)
         {
             var oldStateID = CurrentStateID;
+
+            // Exit old
             _currentState?.ExitState(Context, newStateID);
 
+            // Switch
             if (_states.TryGetValue(newStateID, out var next))
             {
                 _currentState = next;
@@ -55,7 +68,9 @@ namespace Jakkapat.StateMachine.Core
             _currentState?.UpdateState(Context);
         }
 
-        // If you want to forcibly exit the current sub-state
+        /// <summary>
+        /// Forcibly exit the current state if needed.
+        /// </summary>
         public virtual void ExitCurrentState(TStateEnum toState = default)
         {
             _currentState?.ExitState(Context, toState);

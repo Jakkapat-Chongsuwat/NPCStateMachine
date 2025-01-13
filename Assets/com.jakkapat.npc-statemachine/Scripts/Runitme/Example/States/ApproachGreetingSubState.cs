@@ -4,27 +4,27 @@ using Jakkapat.StateMachine.Core;
 namespace Jakkapat.StateMachine.Example
 {
     public class ApproachGreetingSubState
-        : BaseState<NPCContext, StateIDs>
+        : BaseState<NpcContext, StateIDs>
     {
         public override StateIDs ID => StateIDs.ApproachGreeting;
 
-        private readonly StateMachine<NPCContext, StateIDs> _machine;
+        private readonly StateMachine<NpcContext, StateIDs> _machine;
         private float _timer;
         private float _greetingDuration = 2.0f;
 
-        public ApproachGreetingSubState(StateMachine<NPCContext, StateIDs> machine)
+        public ApproachGreetingSubState(StateMachine<NpcContext, StateIDs> machine)
         {
             _machine = machine;
         }
 
-        public override void EnterState(NPCContext context, StateIDs fromState)
+        public override void EnterState(NpcContext context, StateIDs fromState)
         {
             _timer = 0f;
             context.RotateToFaceTarget();
             context.PlayGreetingAnimation();
         }
 
-        public override void UpdateState(NPCContext context)
+        public override void UpdateState(NpcContext context)
         {
             _timer += Time.deltaTime;
             context.RotateToFaceTarget();

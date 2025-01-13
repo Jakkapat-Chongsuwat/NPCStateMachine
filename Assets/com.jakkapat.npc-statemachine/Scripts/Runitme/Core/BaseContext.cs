@@ -3,23 +3,28 @@ using UnityEngine;
 namespace Jakkapat.StateMachine.Core
 {
     /// <summary>
-    /// A generic base context for AI, stored as a ScriptableObject
-    /// so it can be easily referenced in the Inspector if needed.
+    /// A generic base context class for AI,
+    /// no longer a ScriptableObject, just a normal class.
+    /// 
+    /// You can store generic movement speeds or other shared data here,
+    /// plus any default methods using that data.
     /// </summary>
-    [CreateAssetMenu(menuName = "Jakkapat/StateMachine/BaseContext", fileName = "BaseContext")]
-    public class BaseContext : ScriptableObject
+    public class BaseContext
     {
-        [Header("Generic Speed for movement")]
-        public float moveSpeed = 2f;
+        public float MoveSpeed { get; set; } = 2f;   // Generic speed for movement
+        public float turnSpeed { get; set; } = 3f;   // Generic turn speed
 
-        [Header("Generic Turn Speed")]
-        public float turnSpeed = 3f;
+        /// <summary>
+        /// If you want to store an entity's transform,
+        /// you can keep it here. For NPCContext, 
+        /// you might override or just set it from outside.
+        /// </summary>
+        public Transform selfTransform { get; set; }
 
-        [System.NonSerialized]
-        public Transform selfTransform;
 
         /// <summary>
         /// Example method using turnSpeed from BaseContext.
+        /// Rotates 'selfTransform' to face the 'targetPosition'.
         /// </summary>
         public virtual void RotateToward(Vector3 targetPosition)
         {
@@ -38,5 +43,4 @@ namespace Jakkapat.StateMachine.Core
             }
         }
     }
-
 }

@@ -1,6 +1,6 @@
 namespace Jakkapat.StateMachine.Example
 {
-    public enum NPCStates
+    public enum NpcStates
     {
         Idle,
         Roaming,

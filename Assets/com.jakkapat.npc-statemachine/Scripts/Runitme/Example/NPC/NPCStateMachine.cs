@@ -5,7 +5,7 @@ using Jakkapat.StateMachine.Core;
 namespace Jakkapat.StateMachine.Example
 {
     [RequireComponent(typeof(CharacterController))]
-    public class NPCStateMachine : MonoBehaviour
+    public class NpcStateMachine : MonoBehaviour
     {
         [SerializeField] private NavMeshAgent _agent;
         [SerializeField] private Transform _target;
@@ -14,9 +14,8 @@ namespace Jakkapat.StateMachine.Example
         [SerializeField] private float _approachRange = 3f;
         [SerializeField] private float _turnSpeed = 3f;
 
-        // We'll store the context and the machine
-        private NPCContext _context;
-        private StateMachine<NPCContext> _machine;
+        private NpcContext _context;
+        private StateMachine<NpcContext, NpcStates> _machine;
 
         private void Awake()
         {
@@ -30,8 +29,8 @@ namespace Jakkapat.StateMachine.Example
 
         private void Start()
         {
-            // Create the context
-            _context = new NPCContext
+            // 1) Create the context
+            _context = new NpcContext
             {
                 Agent = _agent,
                 SelfTransform = transform,
@@ -40,24 +39,30 @@ namespace Jakkapat.StateMachine.Example
                 TurnSpeed = _turnSpeed
             };
 
-            // The context has a .StateMachine property,
-            // but let's store a reference to it:
-            _machine = _context.StateMachine;
+            // 2) Create the machine
+            _machine = new StateMachine<NpcContext, NpcStates>();
 
-            // Add top-level states like Idle, Roaming, etc. 
-            // For demonstration, let's just add PlayerApproach:
-            _machine.AddState(new PlayerApproachState<NPCContext>());
+            // 3) Set the context into the machine
+            _machine.Context = _context;
 
-            // Start in PlayerApproach or something else:
-            _machine.ChangeState(Core.StateIDs.PlayerApproach);
+            // 4) Also let the context store the machine internally if states want to call
+            _context.SetStateMachine(_machine);
+
+            // 5) Add states
+            // e.g. some generic state "PlayerApproachState<TContext, TStateID>" 
+            // that implements IState<NpcContext, NpcStates> with ID = NpcStates.PlayerApproach
+            _machine.AddState(new PlayerApproachState<NpcContext, NpcStates>(NpcStates.PlayerApproach));
+
+            // 6) Start the machine
+            _machine.ChangeState(NpcStates.PlayerApproach);
         }
 
         private void Update()
         {
-            // Optionally let context do per-frame logic
+            // Let the context do its per-frame logic
             _context.UpdateContext();
 
-            // Let the state machine update
+            // Update the machine
             _machine.Update();
         }
     }

@@ -17,7 +17,7 @@ namespace Jakkapat.StateMachine.Example
         public override StateKey OnEnter(BaseContext context, StateKey fromKey)
         {
             _timer = 0f;
-            if (context is NPCContext npc)
+            if (context is NpcContext npc)
             {
                 npc.HasGreeted = true;
                 npc.PlayGreetingAnimation();
@@ -27,7 +27,7 @@ namespace Jakkapat.StateMachine.Example
 
         public override StateKey OnUpdate(BaseContext context)
         {
-            if (!(context is NPCContext npc)) return this.key;
+            if (!(context is NpcContext npc)) return this.key;
 
             _timer += Time.deltaTime;
 

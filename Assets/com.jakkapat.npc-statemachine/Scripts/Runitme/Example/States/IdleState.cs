@@ -1,47 +1,78 @@
 using UnityEngine;
 using Jakkapat.StateMachine.Core;
+using System;
 
 namespace Jakkapat.StateMachine.Example
 {
-    public class IdleState : BaseState<BaseContext, StateIDs>
+    public class IdleState<TContext, TStateID>
+           : BaseState<TContext, TStateID>
+           where TContext : class,
+                           ITargetable,
+                           IApproachable,
+                           IRotatable,
+                           IAgentMovement,
+                           IContextMachine<TContext, TStateID>
+           where TStateID : struct, Enum
     {
-        public float idleTime = 2f;
+        private readonly TStateID _id;
 
-        private float _timer;
+        public float IdleDuration { get; set; }
+        private float _timer = 0f;
 
-
-        public override EnterState(BaseContext context, TStateEnum fromState)
+        public IdleState(TStateID id, float idleDuration = 2f)
         {
-            _timer = 0f;
-            context.StopMovement();
-            return this.key;
+            _id = id;
+            IdleDuration = idleDuration;
         }
 
-        public override StateKey OnUpdate(BaseContext context)
+        public override TStateID ID => _id;
+
+        public override void EnterState(TContext context, TStateID fromState)
+        {
+            _timer = 0f;
+
+            // context is definitely IAgentMovement => call Stop
+            context.StopMovement();
+
+            Debug.Log($"[IdleState] Enter with ID={_id}, from={fromState}");
+        }
+
+        public override void UpdateState(TContext context)
         {
             _timer += Time.deltaTime;
-            if (!(context ;
 
-            if (context.IsTargetInRange())
+            // context is ITargetable => we can check range
+            bool inRange = context.IsTargetInRange();
+            if (inRange)
             {
+                // context is IApproachable => check HasApproached
                 if (!context.HasApproached)
                 {
-                    // maybe do nothing, or approach logic, etc.
+                    // Not approached => do approach logic or do nothing
                 }
                 else
                 {
+                    // context is IRotatable => face target
                     context.RotateToFaceTarget();
                 }
             }
             else
             {
+                // Player left range => reset approach
                 context.HasApproached = false;
             }
 
-            if (_timer >= context.IdleDuration)
+            if (_timer >= IdleDuration)
             {
-                chanestae
+                Debug.Log($"[IdleState] Idle done => changing to default state ID (just for example).");
+                // context is IContextMachine => we can do a state transition
+                context.StateMachine.ChangeState(default);
             }
+        }
+
+        public override void ExitState(TContext context, TStateID toState)
+        {
+            Debug.Log($"[IdleState] Exit from ID={_id} to {toState}");
         }
     }
 }
