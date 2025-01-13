@@ -841,13 +841,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: NPC
       objectReference: {fileID: 0}
-    - target: {fileID: 7966257468052837722, guid: ed33432994abf204a9eb5f7034c4a667,
-        type: 3}
-      propertyPath: scriptableMachine
-      value: 
-      objectReference: {fileID: 11400000, guid: bd9d7116c39a5af4db03d32c3fc565c6,
-        type: 2}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7966257468052837722, guid: ed33432994abf204a9eb5f7034c4a667, type: 3}
+    - {fileID: 4695058648293239444, guid: ed33432994abf204a9eb5f7034c4a667, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

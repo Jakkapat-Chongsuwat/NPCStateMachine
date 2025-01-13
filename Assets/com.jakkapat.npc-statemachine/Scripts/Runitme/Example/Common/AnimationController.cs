@@ -1,101 +1,108 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class AnimationController : MonoBehaviour
+namespace MyGame.NPC
 {
-    Animator _animator;
-    int _animIDSpeed;
-    int _animIDGrounded;
-    int _animIDJump;
-    int _animIDFreeFall;
-    int _animIDMotionSpeed;
-    int _animIDSurprise;
-    int _animIDGreeting;
+    using UnityEngine;
 
-    [SerializeField] private AudioClip[] footstepClips;
-    [SerializeField] private AudioClip landingClip;
-    [SerializeField] private CharacterController characterController;
-    [Range(0, 1)][SerializeField] private float footstepVolume = 0.5f;
-
-    void Awake()
+    public class AnimationController : MonoBehaviour
     {
-        _animator = GetComponent<Animator>();
-        _animIDSpeed = Animator.StringToHash("Speed");
-        _animIDGrounded = Animator.StringToHash("Grounded");
-        _animIDJump = Animator.StringToHash("Jump");
-        _animIDFreeFall = Animator.StringToHash("FreeFall");
-        _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
-        _animIDSurprise = Animator.StringToHash("Surprise");
-        _animIDGreeting = Animator.StringToHash("Greeting");
-    }
+        Animator _animator;
+        int _animIDSpeed;
+        int _animIDGrounded;
+        int _animIDJump;
+        int _animIDFreeFall;
+        int _animIDMotionSpeed;
+        int _animIDSurprise;
+        int _animIDGreeting;
 
-    public void SetSpeed(float speed)
-    {
-        if (_animator) _animator.SetFloat(_animIDSpeed, speed);
-    }
+        [SerializeField] private AudioClip[] footstepClips;
+        [SerializeField] private AudioClip landingClip;
+        [SerializeField] private CharacterController characterController;
+        [Range(0, 1)][SerializeField] private float footstepVolume = 0.5f;
 
-    public void SetGrounded(bool grounded)
-    {
-        if (_animator) _animator.SetBool(_animIDGrounded, grounded);
-    }
-
-    public void SetJump(bool jump)
-    {
-        if (_animator) _animator.SetBool(_animIDJump, jump);
-    }
-
-    public void SetFreeFall(bool freeFall)
-    {
-        if (_animator) _animator.SetBool(_animIDFreeFall, freeFall);
-    }
-
-    public void SetMotionSpeed(float motionSpeed)
-    {
-        if (_animator) _animator.SetFloat(_animIDMotionSpeed, motionSpeed);
-    }
-
-    public void SetSurprise()
-    {
-        if (_animator) SetTrigger(_animIDSurprise);
-    }
-
-    public void SetGreeting()
-    {
-        if (_animator) SetTrigger(_animIDGreeting);
-    }
-
-    public void SetTrigger(int triggerId)
-    {
-        if (_animator)
+        void Awake()
         {
-            _animator.ResetTrigger(triggerId);
-            _animator.SetTrigger(triggerId);
+            _animator = GetComponent<Animator>();
+            _animIDSpeed = Animator.StringToHash("Speed");
+            _animIDGrounded = Animator.StringToHash("Grounded");
+            _animIDJump = Animator.StringToHash("Jump");
+            _animIDFreeFall = Animator.StringToHash("FreeFall");
+            _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDSurprise = Animator.StringToHash("Surprise");
+            _animIDGreeting = Animator.StringToHash("Greeting");
         }
-    }
 
-    public void OnFootstep(AnimationEvent animEvent)
-    {
-        if (characterController == null || footstepClips == null || footstepClips.Length == 0)
-            return;
-
-        if (animEvent.animatorClipInfo.weight > 0.5f)
+        public void SetSpeed(float speed)
         {
-            int index = Random.Range(0, footstepClips.Length);
-            AudioClip clipToPlay = footstepClips[index];
-            Vector3 position = characterController.transform.TransformPoint(characterController.center);
-
-            AudioSource.PlayClipAtPoint(clipToPlay, position, footstepVolume);
+            if (_animator) _animator.SetFloat(_animIDSpeed, speed);
         }
-    }
 
-    public void OnLand(AnimationEvent animEvent)
-    {
-        if (characterController == null || landingClip == null)
-            return;
-
-        if (animEvent.animatorClipInfo.weight > 0.5f)
+        public void SetGrounded(bool grounded)
         {
-            Vector3 position = characterController.transform.TransformPoint(characterController.center);
-            AudioSource.PlayClipAtPoint(landingClip, position, footstepVolume);
+            if (_animator) _animator.SetBool(_animIDGrounded, grounded);
+        }
+
+        public void SetJump(bool jump)
+        {
+            if (_animator) _animator.SetBool(_animIDJump, jump);
+        }
+
+        public void SetFreeFall(bool freeFall)
+        {
+            if (_animator) _animator.SetBool(_animIDFreeFall, freeFall);
+        }
+
+        public void SetMotionSpeed(float motionSpeed)
+        {
+            if (_animator) _animator.SetFloat(_animIDMotionSpeed, motionSpeed);
+        }
+
+        public void SetSurprise()
+        {
+            if (_animator) SetTrigger(_animIDSurprise);
+        }
+
+        public void SetGreeting()
+        {
+            if (_animator) SetTrigger(_animIDGreeting);
+        }
+
+        public void SetTrigger(int triggerId)
+        {
+            if (_animator)
+            {
+                _animator.ResetTrigger(triggerId);
+                _animator.SetTrigger(triggerId);
+            }
+        }
+
+        public void OnFootstep(AnimationEvent animEvent)
+        {
+            if (characterController == null || footstepClips == null || footstepClips.Length == 0)
+                return;
+
+            if (animEvent.animatorClipInfo.weight > 0.5f)
+            {
+                int index = Random.Range(0, footstepClips.Length);
+                AudioClip clipToPlay = footstepClips[index];
+                Vector3 position = characterController.transform.TransformPoint(characterController.center);
+
+                AudioSource.PlayClipAtPoint(clipToPlay, position, footstepVolume);
+            }
+        }
+
+        public void OnLand(AnimationEvent animEvent)
+        {
+            if (characterController == null || landingClip == null)
+                return;
+
+            if (animEvent.animatorClipInfo.weight > 0.5f)
+            {
+                Vector3 position = characterController.transform.TransformPoint(characterController.center);
+                AudioSource.PlayClipAtPoint(landingClip, position, footstepVolume);
+            }
         }
     }
 }

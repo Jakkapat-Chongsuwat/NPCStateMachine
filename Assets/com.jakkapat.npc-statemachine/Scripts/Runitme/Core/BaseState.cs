@@ -1,15 +1,24 @@
-using System;
-
-namespace Jakkapat.StateMachine.Core
+namespace MyGame.StateMachineFramework
 {
-    public abstract class BaseState<TContext, TStateEnum>
-        : IState<TContext, TStateEnum>
-        where TStateEnum : struct, Enum
+    public abstract class BaseState<TContext> : IState<TContext>
     {
-        public abstract TStateEnum ID { get; }
+        protected StateMachine<TContext> stateMachine;
+        protected TContext Context => stateMachine.Context;
 
-        public virtual void EnterState(TContext context, TStateEnum fromState) { }
-        public virtual void UpdateState(TContext context) { }
-        public virtual void ExitState(TContext context, TStateEnum toState) { }
+        // The constructor sets the parent SM if known at creation time
+        public BaseState(StateMachine<TContext> parentStateMachine)
+        {
+            this.stateMachine = parentStateMachine;
+        }
+
+        // Add this method so we can set/override the state machine reference if needed
+        public void SetParentStateMachine(StateMachine<TContext> newParent)
+        {
+            this.stateMachine = newParent;
+        }
+
+        public virtual void OnEnter() { }
+        public virtual void OnUpdate() { }
+        public virtual void OnExit() { }
     }
 }

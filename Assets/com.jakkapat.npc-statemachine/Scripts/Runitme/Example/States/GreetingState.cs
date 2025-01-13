@@ -1,50 +1,36 @@
 using UnityEngine;
-using Jakkapat.StateMachine.Core;
+using MyGame.StateMachineFramework;
 
-namespace Jakkapat.StateMachine.Example
+namespace MyGame.NPC
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/GreetingState", fileName = "GreetingState")]
-    public class GreetingState : ScriptableState
+    public class GreetingState<TContext> : BaseState<TContext> where TContext : INpcContext
     {
-        [Header("How long to greet before returning idle?")]
-        public float greetingTime = 2f;
+        private float greetingDuration = 1.5f;
 
-        [Header("Next state after greeting? (e.g. Idle)")]
-        public StateKey idleKey;
+        public GreetingState(StateMachine<TContext> parentSM) : base(parentSM) { }
 
-        private float _timer;
-
-        public override StateKey OnEnter(BaseContext context, StateKey fromKey)
+        public override void OnEnter()
         {
-            _timer = 0f;
-            if (context is NpcContext npc)
-            {
-                npc.HasGreeted = true;
-                npc.PlayGreetingAnimation();
-            }
-            return this.key;
+            Debug.Log("NPC: Enter GreetingState");
+            Context.GreetingTimer = greetingDuration;
+            // e.g., play greet animation
         }
 
-        public override StateKey OnUpdate(BaseContext context)
+        public override void OnUpdate()
         {
-            if (!(context is NpcContext npc)) return this.key;
-
-            _timer += Time.deltaTime;
-
-            if (npc.IsTargetInRange())
+            // Decrease timer
+            if (Context.GreetingTimer > 0)
             {
-                npc.RotateToFaceTarget();
+                Context.GreetingTimer -= Time.deltaTime;
+                return;
             }
+            // Time is up: go to Idle
+            stateMachine.ChangeState(new IdleState<TContext>(stateMachine));
+        }
 
-            if (_timer >= greetingTime)
-            {
-                // Done greeting => Change to idleKey
-                if (idleKey != null)
-                {
-                    ChangeState(idleKey);
-                }
-            }
-            return this.key;
+        public override void OnExit()
+        {
+            Debug.Log("NPC: Exit GreetingState");
         }
     }
 }

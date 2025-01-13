@@ -1,16 +1,9 @@
-using System;
-
-namespace Jakkapat.StateMachine.Core
+namespace MyGame.StateMachineFramework
 {
-    /// <summary>
-    /// A generic state interface that uses TContext and TStateEnum.
-    /// </summary>
-    public interface IState<in TContext, TStateEnum>
-        where TStateEnum : struct, Enum
+    public interface IState<TContext>
     {
-        TStateEnum ID { get; }
-        void EnterState(TContext context, TStateEnum fromState);
-        void UpdateState(TContext context);
-        void ExitState(TContext context, TStateEnum toState);
+        void OnEnter();
+        void OnUpdate();
+        void OnExit();
     }
 }

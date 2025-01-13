@@ -1,79 +1,60 @@
-using System;
 using System.Collections.Generic;
 
-namespace Jakkapat.StateMachine.Core
+namespace MyGame.StateMachineFramework
 {
-    /// <summary>
-    /// A strongly-typed state machine that uses (TContext, TStateEnum).
-    /// TStateEnum must be an enum or struct with Enum constraint.
-    /// </summary>
-    public class StateMachine<TContext, TStateEnum>
-        where TStateEnum : struct, Enum
+    public class StateMachine<TContext>
     {
-        protected readonly Dictionary<TStateEnum, IState<TContext, TStateEnum>> _states
-            = new Dictionary<TStateEnum, IState<TContext, TStateEnum>>();
+        private IState<TContext> currentState;
+        private readonly List<ITransition<TContext>> transitions = new List<ITransition<TContext>>();
 
-        protected IState<TContext, TStateEnum> _currentState;
+        public IState<TContext> CurrentState => currentState;
 
-        public TContext Context { get; set; }
-        public TStateEnum CurrentStateID { get; protected set; }
+        public TContext Context { get; private set; }
 
-        /// <summary>
-        /// Parameterless constructor (you can set .Context after creation).
-        /// </summary>
-        public StateMachine()
-        {
-            // no-op
-        }
-
-        /// <summary>
-        /// Optional convenience constructor that sets the context immediately.
-        /// </summary>
-        public StateMachine(TContext context)
+        public StateMachine(TContext context, IState<TContext> initialState)
         {
             Context = context;
+            Initialize(initialState);
         }
 
-        public virtual void AddState(IState<TContext, TStateEnum> state)
+        public void Initialize(IState<TContext> startingState)
         {
-            if (state == null) return;
-            var id = state.ID;
-            if (!_states.ContainsKey(id))
-                _states[id] = state;
+            currentState = startingState;
+            currentState?.OnEnter();
         }
 
-        public virtual void ChangeState(TStateEnum newStateID)
+        public void Update()
         {
-            var oldStateID = CurrentStateID;
-
-            // Exit old
-            _currentState?.ExitState(Context, newStateID);
-
-            // Switch
-            if (_states.TryGetValue(newStateID, out var next))
+            for (int i = 0; i < transitions.Count; i++)
             {
-                _currentState = next;
-                CurrentStateID = newStateID;
-                _currentState.EnterState(Context, oldStateID);
+                var t = transitions[i];
+                if (t.FromState == currentState && t.ShouldTransition(Context))
+                {
+                    ChangeState(t.ToState);
+                    break;
+                }
             }
-            else
-            {
-                _currentState = null;
-                CurrentStateID = default;
-            }
+
+            currentState?.OnUpdate();
         }
 
-        public virtual void Update()
+        public void ChangeState(IState<TContext> newState)
         {
-            _currentState?.UpdateState(Context);
+            if (newState == null || newState == currentState) return;
+
+            currentState?.OnExit();
+            currentState = newState;
+            currentState?.OnEnter();
         }
 
-        /// <summary>
-        /// Forcibly exit the current state if needed.
-        /// </summary>
-        public virtual void ExitCurrentState(TStateEnum toState = default)
+        public void AddTransition(ITransition<TContext> transition)
         {
-            _currentState?.ExitState(Context, toState);
+            transitions.Add(transition);
+        }
+
+        public void RemoveTransition(ITransition<TContext> transition)
+        {
+            transitions.Remove(transition);
         }
     }
 }

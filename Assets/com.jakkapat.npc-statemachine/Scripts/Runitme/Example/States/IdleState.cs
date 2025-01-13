@@ -1,78 +1,33 @@
 using UnityEngine;
-using Jakkapat.StateMachine.Core;
-using System;
+using MyGame.StateMachineFramework;
 
-namespace Jakkapat.StateMachine.Example
+namespace MyGame.NPC
 {
-    public class IdleState<TContext, TStateID>
-           : BaseState<TContext, TStateID>
-           where TContext : class,
-                           ITargetable,
-                           IApproachable,
-                           IRotatable,
-                           IAgentMovement,
-                           IContextMachine<TContext, TStateID>
-           where TStateID : struct, Enum
+    public class IdleState<TContext> : BaseState<TContext> where TContext : INpcContext
     {
-        private readonly TStateID _id;
+        public IdleState(StateMachine<TContext> parentSM) : base(parentSM) { }
 
-        public float IdleDuration { get; set; }
-        private float _timer = 0f;
-
-        public IdleState(TStateID id, float idleDuration = 2f)
+        public override void OnEnter()
         {
-            _id = id;
-            IdleDuration = idleDuration;
+            Debug.Log("NPC: Enter IdleState - Always face the player");
+            // e.g., play idle animation
         }
 
-        public override TStateID ID => _id;
-
-        public override void EnterState(TContext context, TStateID fromState)
+        public override void OnUpdate()
         {
-            _timer = 0f;
-
-            // context is definitely IAgentMovement => call Stop
-            context.StopMovement();
-
-            Debug.Log($"[IdleState] Enter with ID={_id}, from={fromState}");
+            // Keep facing the player
+            FacePlayer();
         }
 
-        public override void UpdateState(TContext context)
+        private void FacePlayer()
         {
-            _timer += Time.deltaTime;
-
-            // context is ITargetable => we can check range
-            bool inRange = context.IsTargetInRange();
-            if (inRange)
-            {
-                // context is IApproachable => check HasApproached
-                if (!context.HasApproached)
-                {
-                    // Not approached => do approach logic or do nothing
-                }
-                else
-                {
-                    // context is IRotatable => face target
-                    context.RotateToFaceTarget();
-                }
-            }
-            else
-            {
-                // Player left range => reset approach
-                context.HasApproached = false;
-            }
-
-            if (_timer >= IdleDuration)
-            {
-                Debug.Log($"[IdleState] Idle done => changing to default state ID (just for example).");
-                // context is IContextMachine => we can do a state transition
-                context.StateMachine.ChangeState(default);
-            }
+            Vector3 direction = (Context.PlayerPosition - Context.NpcPosition).normalized;
+            // e.g. npcTransform.forward = direction;
         }
 
-        public override void ExitState(TContext context, TStateID toState)
+        public override void OnExit()
         {
-            Debug.Log($"[IdleState] Exit from ID={_id} to {toState}");
+            Debug.Log("NPC: Exit IdleState");
         }
     }
 }

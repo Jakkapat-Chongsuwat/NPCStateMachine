@@ -1035,8 +1035,7 @@ GameObject:
   - component: {fileID: 4416926081852918491}
   - component: {fileID: 5885216827943657505}
   - component: {fileID: 8313111365677379496}
-  - component: {fileID: 7966257468052837722}
-  - component: {fileID: 4695058648293239444}
+  - component: {fileID: 5609363816454602016}
   m_Layer: 8
   m_Name: NPC
   m_TagString: NPC
@@ -1148,7 +1147,7 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &7966257468052837722
+--- !u!114 &5609363816454602016
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1157,35 +1156,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 4416926081852918481}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2453aee175d74d489dd74f665747ac5, type: 3}
+  m_Script: {fileID: 11500000, guid: 46dd9428f6d96df4baefd907d80afbe8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scriptableMachine: {fileID: 11400000, guid: bd9d7116c39a5af4db03d32c3fc565c6, type: 2}
-  _agent: {fileID: 8313111365677379496}
-  _animController: {fileID: 4695058648293239444}
-  _target: {fileID: 0}
-  _idleDuration: 2
-  _turnSpeed: 5
-  _approachRange: 3
---- !u!114 &4695058648293239444
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4416926081852918481}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 333830935eea68d4694da9bdc6d8c8b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  footstepClips:
-  - {fileID: 8300000, guid: 72f526a6a9890f643a88e85a61c86c8a, type: 3}
-  - {fileID: 8300000, guid: 85016e0f2b01da248b9663dd49a161b0, type: 3}
-  - {fileID: 8300000, guid: 186de84b3207156479abe98f4958fed0, type: 3}
-  landingClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
-  characterController: {fileID: 4416926081852918491}
-  footstepVolume: 0.5
+  playerTransform: {fileID: 0}
+  behindDotThreshold: 0.5
+  approachDistance: 3
 --- !u!1 &4523139366846529165
 GameObject:
   m_ObjectHideFlags: 0
