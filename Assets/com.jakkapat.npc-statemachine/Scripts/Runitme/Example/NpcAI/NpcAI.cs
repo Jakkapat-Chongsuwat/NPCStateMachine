@@ -1,12 +1,14 @@
 using UnityEngine;
-using MyGame.StateMachineFramework;
+using UnityEngine.AI;
+using Jakkapat.ToppuFSM.Core;
+using System.Collections.Generic;
 
-namespace MyGame.NPC
+namespace Jakkapat.ToppuFSM.Example
 {
     public class NpcAI : MonoBehaviour
     {
         private NpcContext npcContext;
-        private StateMachine<NpcContext> mainStateMachine;
+        private StateMachine<NpcContext> fsm;
 
         public Transform playerTransform;
         public float behindDotThreshold = 0.5f;
@@ -16,65 +18,82 @@ namespace MyGame.NPC
         {
             playerTransform = GameObject.FindWithTag("Player").transform;
 
-            // 1. Create context
-            npcContext = new NpcContext();
-            npcContext.animationController = GetComponent<AnimationController>();
+            npcContext = new NpcContext
+            {
+                animationController = GetComponent<AnimationController>(),
+                navMeshAgent = GetComponent<NavMeshAgent>(),
 
-            // 2. Create initial (start) state - we can pass null for now
-            //    then later we call 'SetParentStateMachine(...)'
-            var patrolState = new PatrolState<NpcContext>(null);
+                NpcTransform = this.transform
+            };
 
-            // 3. Create the main state machine with the context
-            mainStateMachine = new StateMachine<NpcContext>(npcContext, patrolState);
+            fsm = new StateMachine<NpcContext>(npcContext, null);
 
-            // Fix the parent's reference:
-            patrolState.SetParentStateMachine(mainStateMachine);
+            var patrolState = new PatrolState<NpcContext>(fsm);
 
-            // 3.1. We need a sub-state for PlayerApproachState, e.g. ApproachDecisionState
+            // sub-states
             var approachDecision = new ApproachDecisionState<NpcContext>(null);
-            // We'll set its parent SM later as well
+            var surpriseState = new SurpriseState<NpcContext>(null);
+            var turnToPlayer = new TurnToPlayerState<NpcContext>(null);
+            var greetingState = new GreetingState<NpcContext>(null);
+            var idleState = new IdleState<NpcContext>(null);
 
-            // 4. Create PlayerApproachState with the default sub-state
-            //    Because your HierarchicalState wants (parentSM, defaultSubState)
+            var subTransitions = new List<ITransition<NpcContext>>
+            {
+                new Transition<NpcContext>(approachDecision, surpriseState,
+                    ctx => ctx.IsApproachDecisionComplete && ctx.ApproachFromBehind),
+                new Transition<NpcContext>(approachDecision, greetingState,
+                    ctx => ctx.IsApproachDecisionComplete && !ctx.ApproachFromBehind),
+                new Transition<NpcContext>(surpriseState, turnToPlayer,
+                    ctx => ctx.SurpriseDone),
+                new Transition<NpcContext>(turnToPlayer, greetingState,
+                    ctx => ctx.HasFacedPlayer),
+                new Transition<NpcContext>(greetingState, idleState,
+                    ctx => ctx.IsGreetingDone)
+            };
+
             var playerApproachState = new PlayerApproachState<NpcContext>(
-                mainStateMachine,
-                approachDecision
+                fsm,
+                approachDecision,
+                new IState<NpcContext>[] { approachDecision, surpriseState, turnToPlayer, greetingState, idleState },
+                subTransitions
             );
 
-            // Now fix approachDecision to reference the subStateMachine from playerApproachState
-            // But note that the subStateMachine is inside PlayerApproachState. 
-            // You can expose a public property or method to retrieve or set it. For example:
-            //  (approachDecision as BaseState<NpcContext>).SetParentStateMachine(
-            //      playerApproachState.SubStateMachine
-            //  );
+            fsm.Initialize(patrolState);
 
-            // 5. Add transitions (outside of states)
-            mainStateMachine.AddTransition(new Transition<NpcContext>(
-                fromState: patrolState,
-                toState: playerApproachState,
-                condition: (ctx) => ctx.IsPlayerApproaching
+            fsm.AddTransition(new Transition<NpcContext>(
+                patrolState,
+                playerApproachState,
+                ctx => ctx.IsPlayerApproaching
             ));
 
-            // 6. We’re done (for now). The sub-states handle behind vs. front logic themselves.
+            fsm.AddTransition(new Transition<NpcContext>(
+                playerApproachState,
+                patrolState,
+                ctx => !ctx.IsPlayerApproaching
+            ));
         }
 
         void Update()
         {
-            // Update our context each frame
+            UpdatePositions();
+            UpdateApproachInfo();
+            fsm.Update();
+        }
+
+        private void UpdatePositions()
+        {
             npcContext.NpcPosition = transform.position;
             npcContext.PlayerPosition = playerTransform.position;
+        }
 
-            // Decide if player is approaching
+        private void UpdateApproachInfo()
+        {
             float distance = Vector3.Distance(npcContext.NpcPosition, npcContext.PlayerPosition);
             npcContext.IsPlayerApproaching = (distance < approachDistance);
 
-            // Decide if approach is from behind
             Vector3 toPlayer = (playerTransform.position - transform.position).normalized;
             float dot = Vector3.Dot(transform.forward, toPlayer);
             npcContext.IsApproachFromBehind = (dot < behindDotThreshold);
-
-            // Tick the state machine
-            mainStateMachine.Update();
         }
     }
 }

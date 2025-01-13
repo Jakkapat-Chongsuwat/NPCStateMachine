@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace MyGame.StateMachineFramework
+namespace Jakkapat.ToppuFSM.Core
 {
     public class LayeredStateMachine<TContext>
     {

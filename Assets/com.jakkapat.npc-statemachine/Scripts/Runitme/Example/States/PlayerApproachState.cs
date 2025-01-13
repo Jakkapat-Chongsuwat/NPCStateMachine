@@ -1,28 +1,47 @@
 using UnityEngine;
-using MyGame.StateMachineFramework;
+using Jakkapat.ToppuFSM.Core;
+using System.Collections.Generic;
 
-namespace MyGame.NPC
+namespace Jakkapat.ToppuFSM.Example
 {
     public class PlayerApproachState<TContext> : HierarchicalState<TContext>
         where TContext : INpcContext
     {
-        // If you kept the revised constructor with 'defaultSubState' param, do this:
         public PlayerApproachState(
             StateMachine<TContext> parentStateMachine,
-            IState<TContext> defaultSubState
+            IState<TContext> defaultSubState,
+            IState<TContext>[] allSubStates,
+            List<ITransition<TContext>> subTransitions
         ) : base(parentStateMachine, defaultSubState)
         {
+            foreach (var st in allSubStates)
+            {
+                if (st is BaseState<TContext> baseSt)
+                {
+                    baseSt.SetParentStateMachine(subStateMachine);
+                }
+            }
+
+            foreach (var tr in subTransitions)
+            {
+                subStateMachine.AddTransition(tr);
+            }
         }
 
         public override void OnEnter()
         {
             base.OnEnter();
-            Debug.Log("NPC: Enter PlayerApproach (Hierarchical State)");
+            Debug.Log("Enter PlayerApproachState (Hierarchical)");
         }
 
         public override void OnExit()
         {
-            Debug.Log("NPC: Exit PlayerApproach (Hierarchical State)");
+            Context.animationController?.SetSpeed(0f);
+            Context.animationController?.SetMotionSpeed(0f);
+
+            Context.navMeshAgent?.SetDestination(Context.NpcPosition);
+            Context.navMeshAgent.isStopped = false;
+
             base.OnExit();
         }
     }

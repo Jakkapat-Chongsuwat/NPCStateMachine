@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace MyGame.StateMachineFramework
+namespace Jakkapat.ToppuFSM.Core
 {
     public class StateMachine<TContext>
     {
@@ -30,7 +30,12 @@ namespace MyGame.StateMachineFramework
                 var t = transitions[i];
                 if (t.FromState == currentState && t.ShouldTransition(Context))
                 {
-                    ChangeState(t.ToState);
+                    // New: check if the current state can exit
+                    if (currentState.CanExit())
+                    {
+                        ChangeState(t.ToState);
+                    }
+                    // If not, we skip (or queue it) 
                     break;
                 }
             }

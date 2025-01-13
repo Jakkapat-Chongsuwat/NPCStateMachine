@@ -1,17 +1,22 @@
-namespace MyGame.StateMachineFramework
+namespace Jakkapat.ToppuFSM.Core
 {
     public abstract class BaseState<TContext> : IState<TContext>
     {
         protected StateMachine<TContext> stateMachine;
         protected TContext Context => stateMachine.Context;
 
-        // The constructor sets the parent SM if known at creation time
+        public bool needsExitTime { get; set; } = false;
+
+        public virtual bool CanExit()
+        {
+            return !needsExitTime;
+        }
+
         public BaseState(StateMachine<TContext> parentStateMachine)
         {
             this.stateMachine = parentStateMachine;
         }
 
-        // Add this method so we can set/override the state machine reference if needed
         public void SetParentStateMachine(StateMachine<TContext> newParent)
         {
             this.stateMachine = newParent;

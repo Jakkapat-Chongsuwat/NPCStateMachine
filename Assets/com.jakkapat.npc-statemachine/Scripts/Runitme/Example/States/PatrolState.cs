@@ -1,28 +1,57 @@
 using UnityEngine;
-using MyGame.StateMachineFramework;
+using UnityEngine.AI;
+using Jakkapat.ToppuFSM.Core;
 
-namespace MyGame.NPC
+namespace Jakkapat.ToppuFSM.Example
 {
     public class PatrolState<TContext> : BaseState<TContext> where TContext : INpcContext
     {
+        private float waypointThreshold = 1.0f;
+        private float roamRange = 10f;
+        private Vector3 currentDestination;
+
         public PatrolState(StateMachine<TContext> parentSM) : base(parentSM) { }
 
         public override void OnEnter()
         {
-            Debug.Log("NPC: Enter Patrol");
-            // e.g., play patrol animation, reset path
+            currentDestination = GetRandomNavMeshPoint(Context.NpcPosition, roamRange);
+            SetAgentDestination(currentDestination);
+            Context.animationController?.SetSpeed(0f);
+            Context.animationController?.SetMotionSpeed(0f);
         }
 
         public override void OnUpdate()
         {
-            // Some patrol logic, e.g. move between waypoints
-            // Example: If we detect the player is approaching, set IsPlayerApproaching = true
-            // That will trigger the external transition to PlayerApproachState.
+            if (Context.navMeshAgent == null) return;
+
+            float agentSpeed = Context.navMeshAgent.velocity.magnitude;
+            float speedRatio = (Context.navMeshAgent.speed > 0f)
+                ? agentSpeed / Context.navMeshAgent.speed
+                : 0f;
+
+            Context.animationController?.SetSpeed(agentSpeed);
+            Context.animationController?.SetMotionSpeed(speedRatio);
+
+            float distanceToDest = Vector3.Distance(Context.NpcPosition, currentDestination);
+            if (distanceToDest < waypointThreshold)
+            {
+                currentDestination = GetRandomNavMeshPoint(Context.NpcPosition, roamRange);
+                SetAgentDestination(currentDestination);
+            }
         }
 
-        public override void OnExit()
+        public override void OnExit() { }
+
+        private void SetAgentDestination(Vector3 destination)
         {
-            Debug.Log("NPC: Exit Patrol");
+            Context.navMeshAgent?.SetDestination(destination);
+        }
+
+        private Vector3 GetRandomNavMeshPoint(Vector3 origin, float range)
+        {
+            Vector3 randomDirection = Random.insideUnitSphere * range + origin;
+            NavMesh.SamplePosition(randomDirection, out var hit, range, NavMesh.AllAreas);
+            return hit.position;
         }
     }
 }

@@ -1,8 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace MyGame.NPC
+namespace Jakkapat.ToppuFSM.Example
 {
     using UnityEngine;
 

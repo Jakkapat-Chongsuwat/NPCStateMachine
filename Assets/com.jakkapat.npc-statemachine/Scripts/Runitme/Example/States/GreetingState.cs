@@ -1,31 +1,38 @@
 using UnityEngine;
-using MyGame.StateMachineFramework;
+using Jakkapat.ToppuFSM.Core;
 
-namespace MyGame.NPC
+namespace Jakkapat.ToppuFSM.Example
 {
-    public class GreetingState<TContext> : BaseState<TContext> where TContext : INpcContext
+    public class GreetingState<TContext> : BaseState<TContext>
+        where TContext : INpcContext
     {
-        private float greetingDuration = 1.5f;
+        private float greetingDuration = 3.0f;
 
         public GreetingState(StateMachine<TContext> parentSM) : base(parentSM) { }
 
         public override void OnEnter()
         {
-            Debug.Log("NPC: Enter GreetingState");
+            base.OnEnter();
+            needsExitTime = true;
             Context.GreetingTimer = greetingDuration;
-            // e.g., play greet animation
+            Context.IsGreetingDone = false;
+            Context.animationController?.SetGreeting();
+
+            Context.navMeshAgent?.SetDestination(Context.NpcPosition);
+            Context.navMeshAgent.isStopped = true;
         }
 
         public override void OnUpdate()
         {
-            // Decrease timer
             if (Context.GreetingTimer > 0)
             {
                 Context.GreetingTimer -= Time.deltaTime;
-                return;
+                if (Context.GreetingTimer <= 0)
+                {
+                    Context.IsGreetingDone = true;
+                    needsExitTime = false;
+                }
             }
-            // Time is up: go to Idle
-            stateMachine.ChangeState(new IdleState<TContext>(stateMachine));
         }
 
         public override void OnExit()

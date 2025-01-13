@@ -1,7 +1,7 @@
 using UnityEngine;
-using MyGame.StateMachineFramework;
+using Jakkapat.ToppuFSM.Core;
 
-namespace MyGame.NPC
+namespace Jakkapat.ToppuFSM.Example
 {
     public class IdleState<TContext> : BaseState<TContext> where TContext : INpcContext
     {
@@ -9,20 +9,15 @@ namespace MyGame.NPC
 
         public override void OnEnter()
         {
-            Debug.Log("NPC: Enter IdleState - Always face the player");
-            // e.g., play idle animation
+            Context.animationController?.SetSpeed(0f);
+            Context.animationController?.SetMotionSpeed(0f);
+            Debug.Log("NPC: Enter IdleState");
         }
 
         public override void OnUpdate()
         {
-            // Keep facing the player
-            FacePlayer();
-        }
-
-        private void FacePlayer()
-        {
-            Vector3 direction = (Context.PlayerPosition - Context.NpcPosition).normalized;
-            // e.g. npcTransform.forward = direction;
+            Vector3 dir = (Context.PlayerPosition - Context.NpcPosition).normalized;
+            // e.g. transform.forward = dir;
         }
 
         public override void OnExit()

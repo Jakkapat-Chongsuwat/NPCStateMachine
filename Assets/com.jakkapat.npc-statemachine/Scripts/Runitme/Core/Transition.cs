@@ -1,4 +1,4 @@
-namespace MyGame.StateMachineFramework
+namespace Jakkapat.ToppuFSM.Core
 {
     public class Transition<TContext> : ITransition<TContext>
     {

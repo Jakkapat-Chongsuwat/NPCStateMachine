@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace MyGame.StateMachineFramework
+namespace Jakkapat.ToppuFSM.Core
 {
     /// <summary>
     /// A base class for hierarchical (nested) states that contain a sub-state machine.

@@ -1,30 +1,39 @@
 using UnityEngine;
-using MyGame.StateMachineFramework;
+using Jakkapat.ToppuFSM.Core;
 
-namespace MyGame.NPC
+namespace Jakkapat.ToppuFSM.Example
 {
-    public class SurpriseState<TContext> : BaseState<TContext> where TContext : INpcContext
+    public class SurpriseState<TContext> : BaseState<TContext>
+        where TContext : INpcContext
     {
-        private float surpriseTimer;
-
         public SurpriseState(StateMachine<TContext> parentSM) : base(parentSM) { }
 
         public override void OnEnter()
         {
-            Debug.Log("NPC: Enter SurpriseState");
-            // Possibly play "surprise" animation
-            surpriseTimer = 1.0f; // example duration
+            base.OnEnter();
+            needsExitTime = true;
+
+            if (Context.navMeshAgent != null)
+            {
+                Context.navMeshAgent.isStopped = true;
+            }
+
+            Context.SurpriseTimer = 3.0f;
+            Context.SurpriseDone = false;
+            Context.animationController?.SetSurprise();
         }
 
         public override void OnUpdate()
         {
-            if (surpriseTimer > 0)
+            if (Context.SurpriseTimer > 0)
             {
-                surpriseTimer -= Time.deltaTime;
-                return;
+                Context.SurpriseTimer -= Time.deltaTime;
+                if (Context.SurpriseTimer <= 0)
+                {
+                    Context.SurpriseDone = true;
+                    needsExitTime = false;
+                }
             }
-            // Once done with surprise animation, go to TurnToPlayer
-            stateMachine.ChangeState(new TurnToPlayerState<TContext>(stateMachine));
         }
 
         public override void OnExit()
