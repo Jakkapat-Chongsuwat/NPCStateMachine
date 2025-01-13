@@ -3,52 +3,45 @@ using Jakkapat.StateMachine.Core;
 
 namespace Jakkapat.StateMachine.Example
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/IdleState", fileName = "IdleState")]
-    public class IdleState : ScriptableState
+    public class IdleState : BaseState<BaseContext, StateIDs>
     {
         public float idleTime = 2f;
-        public StateKey roamingKey;
 
         private float _timer;
 
 
-        public override StateKey OnEnter(BaseContext context, StateKey fromKey)
+        public override EnterState(BaseContext context, TStateEnum fromState)
         {
             _timer = 0f;
-            if (context is NPCContext npc)
-            {
-                npc.StopMovement();
-            }
+            context.StopMovement();
             return this.key;
         }
 
         public override StateKey OnUpdate(BaseContext context)
         {
             _timer += Time.deltaTime;
-            if (!(context is NPCContext npc)) return this.key;
+            if (!(context ;
 
-            if (npc.IsTargetInRange())
+            if (context.IsTargetInRange())
             {
-                if (!npc.HasApproached)
+                if (!context.HasApproached)
                 {
                     // maybe do nothing, or approach logic, etc.
                 }
                 else
                 {
-                    npc.RotateToFaceTarget();
+                    context.RotateToFaceTarget();
                 }
             }
             else
             {
-                npc.HasApproached = false;
+                context.HasApproached = false;
             }
 
-            if (_timer >= npc.IdleDuration)
+            if (_timer >= context.IdleDuration)
             {
-                // Transition to Roaming
-                return roamingKey;
+                chanestae
             }
-            return this.key;
         }
     }
 }
