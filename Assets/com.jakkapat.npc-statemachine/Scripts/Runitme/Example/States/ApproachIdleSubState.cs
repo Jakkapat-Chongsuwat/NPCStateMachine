@@ -1,22 +1,29 @@
-using UnityEngine;
 using Jakkapat.StateMachine.Core;
 
 namespace Jakkapat.StateMachine.Example
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/ApproachIdle", fileName = "ApproachIdleSubState")]
-    public class ApproachIdleSubState : ScriptableState
+    public class ApproachIdleSubState
+        : BaseState<NPCContext, StateIDs>
     {
-        public override StateKey OnUpdate(BaseContext context)
+        public override StateIDs ID => StateIDs.ApproachIdle;
+
+        private readonly StateMachine<NPCContext, StateIDs> _machine;
+
+        public ApproachIdleSubState(StateMachine<NPCContext, StateIDs> machine)
         {
-            if (context is NPCContext npc)
+            _machine = machine;
+        }
+
+        public override void UpdateState(NPCContext context)
+        {
+            if (context.IsTargetInRange())
             {
-                if (npc.IsTargetInRange())
-                {
-                    npc.RotateToFaceTarget();
-                }
+                context.RotateToFaceTarget();
             }
-            // remain in approach idle
-            return this.key;
+            else
+            {
+                // Possibly do nothing or revert to Idle
+            }
         }
     }
 }

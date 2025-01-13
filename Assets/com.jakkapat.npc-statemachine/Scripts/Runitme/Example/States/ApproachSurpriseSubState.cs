@@ -3,38 +3,37 @@ using Jakkapat.StateMachine.Core;
 
 namespace Jakkapat.StateMachine.Example
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/ApproachSurprise", fileName = "ApproachSurpriseSubState")]
-    public class ApproachSurpriseSubState : ScriptableState
+    public class ApproachSurpriseSubState
+        : BaseState<NPCContext, StateIDs>
     {
-        [Tooltip("How long we remain in surprise before greeting?")]
-        public float surpriseDuration = 1.0f;
+        public override StateIDs ID => StateIDs.ApproachSurprise;
 
-        public StateKey approachGreetingKey;
-
+        private readonly StateMachine<NPCContext, StateIDs> _machine;
         private float _timer;
+        private float _surpriseDuration = 1.0f;
 
-        public override StateKey OnEnter(BaseContext context, StateKey fromKey)
+        public ApproachSurpriseSubState(StateMachine<NPCContext, StateIDs> machine)
         {
-            _timer = 0f;
-            if (context is NPCContext npc)
-            {
-                npc.HasApproached = true;
-                npc.RotateToTargetFraction(0.5f);
-                npc.PlaySurpriseAnimation();
-            }
-            return this.key;
+            _machine = machine;
         }
 
-        public override StateKey OnUpdate(BaseContext context)
+        public override void EnterState(NPCContext context, StateIDs fromState)
+        {
+            _timer = 0f;
+            context.HasApproached = true;
+            context.RotateToTargetFraction(0.5f);
+            context.PlaySurpriseAnimation();
+        }
+
+        public override void UpdateState(NPCContext context)
         {
             _timer += Time.deltaTime;
-
-            if (_timer >= surpriseDuration)
+            if (_timer >= _surpriseDuration)
             {
-                // go greeting
-                return approachGreetingKey;
+                context.RotateToFaceTarget();
+                context.PlayGreetingAnimation();
+                _machine.ChangeState(StateIDs.ApproachGreeting);
             }
-            return this.key;
         }
     }
 }

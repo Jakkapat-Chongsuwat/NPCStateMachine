@@ -1,16 +1,14 @@
 namespace Jakkapat.StateMachine.Example
 {
-    public enum StateIDs
+    public enum NPCStates
     {
         Idle,
         Roaming,
-        Approach,
-        Surprise,
-        Greeting,
         PlayerApproach,
         ApproachInitial,
         ApproachSurprise,
         ApproachGreeting,
         ApproachIdle
+        // Add as needed
     }
 }

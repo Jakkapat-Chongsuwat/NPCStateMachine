@@ -1,39 +1,32 @@
-using UnityEngine;
 using Jakkapat.StateMachine.Core;
 
 namespace Jakkapat.StateMachine.Example
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/ApproachInitial", fileName = "ApproachInitialSubState")]
-    public class ApproachInitialSubState : ScriptableState
+    public class ApproachInitialSubState
+       : BaseState<BaseContext, StateIDs>
     {
-        public StateKey approachSurpriseKey;
-        public StateKey approachGreetingKey;
+        public override StateIDs ID => StateIDs.ApproachInitial;
 
-        public override StateKey OnEnter(BaseContext context, StateKey fromKey)
+        private readonly StateMachine<BaseContext, StateIDs> _machine;
+
+        public ApproachInitialSubState(StateMachine<BaseContext, StateIDs> machine)
         {
-            // do nothing
-            return this.key;
+            _machine = machine;
         }
 
-        public override StateKey OnUpdate(BaseContext context)
+        public override void UpdateState(BaseContext context)
         {
-            if (context is NPCContext npc)
+            if (context.IsPlayerApproachFromBehind())
             {
-                if (npc.IsPlayerApproachFromBehind())
-                {
-                    npc.HasApproached = true;
-                    // go surprise
-                    return approachSurpriseKey;
-                }
-                else
-                {
-                    npc.HasApproached = true;
-                    npc.PlayGreetingAnimation();
-                    // go greeting
-                    return approachGreetingKey;
-                }
+                context.HasApproached = true;
+                _machine.ChangeState(StateIDs.ApproachSurprise);
             }
-            return this.key;
+            else
+            {
+                context.HasApproached = true;
+                context.PlayGreetingAnimation();
+                _machine.ChangeState(StateIDs.ApproachGreeting);
+            }
         }
     }
 }

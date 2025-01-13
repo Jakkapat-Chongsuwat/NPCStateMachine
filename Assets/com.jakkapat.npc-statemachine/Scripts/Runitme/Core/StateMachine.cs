@@ -1,100 +1,64 @@
+using System;
 using System.Collections.Generic;
 
 namespace Jakkapat.StateMachine.Core
 {
     /// <summary>
-    /// A code-based machine that manages states using StateKey.
+    /// A strongly-typed state machine that uses TStateEnum
+    /// for the ID. Each module can define its own TStateEnum.
     /// </summary>
-    public class StateMachine<TContext>
+    public class StateMachine<TContext, TStateEnum>
+        where TStateEnum : struct, Enum
     {
-        // Instead of Dictionary<StateIDs, IState<TContext>>, 
-        // we store Dictionary<StateKey, IState<TContext>>.
-        protected readonly Dictionary<StateKey, IState<TContext>> _states
-            = new Dictionary<StateKey, IState<TContext>>();
+        protected readonly Dictionary<TStateEnum, IState<TContext, TStateEnum>> _states
+            = new Dictionary<TStateEnum, IState<TContext, TStateEnum>>();
 
-        protected IState<TContext> _currentState;
+        protected IState<TContext, TStateEnum> _currentState;
 
         public TContext Context { get; set; }
-
-        public StateKey CurrentStateKey { get; protected set; }
+        public TStateEnum CurrentStateID { get; protected set; }
 
         public StateMachine() { }
-
         public StateMachine(TContext context)
         {
             Context = context;
         }
 
-        /// <summary>
-        /// Register a state in the machine. 
-        /// The state's Key is used in the dictionary.
-        /// </summary>
-        public virtual void AddState(IState<TContext> state)
+        public virtual void AddState(IState<TContext, TStateEnum> state)
         {
             if (state == null) return;
-            var key = state.Key;
-            if (!_states.ContainsKey(key))
-            {
-                _states[key] = state;
-            }
+            var id = state.ID;
+            if (!_states.ContainsKey(id))
+                _states[id] = state;
         }
 
-        /// <summary>
-        /// Transition to the state that has the given Key.
-        /// If found, we exit the old state, and enter the new state.
-        /// </summary>
-        public virtual void ChangeState(StateKey newKey)
+        public virtual void ChangeState(TStateEnum newStateID)
         {
-            // 1) Exit old
-            var oldKey = CurrentStateKey;
-            _currentState?.ExitState(Context, newKey);
+            var oldStateID = CurrentStateID;
+            _currentState?.ExitState(Context, newStateID);
 
-            // 2) Find the next state by the new Key
-            if (_states.TryGetValue(newKey, out var next))
+            if (_states.TryGetValue(newStateID, out var next))
             {
                 _currentState = next;
-                CurrentStateKey = newKey;
-
-                // 3) Enter the new state
-                _currentState.EnterState(Context, oldKey);
+                CurrentStateID = newStateID;
+                _currentState.EnterState(Context, oldStateID);
             }
             else
             {
-                // Not found
                 _currentState = null;
-                CurrentStateKey = null;
+                CurrentStateID = default;
             }
         }
 
-        /// <summary>
-        /// Forcibly exit the current state. Pass a 'toKey' if you want to specify 
-        /// which Key you're transitioning to, or null if you just want to exit.
-        /// </summary>
-        public virtual void ExitCurrentState(StateKey toKey = null)
-        {
-            if (_currentState != null)
-            {
-                _currentState.ExitState(Context, toKey);
-            }
-        }
-
-        /// <summary>
-        /// The machine calls UpdateState on the current state each frame, 
-        /// letting it potentially return a Key to transition to.
-        /// </summary>
         public virtual void Update()
         {
-            if (_currentState != null)
-            {
-                // Some states might return a next key for auto-transitions:
-                var nextKey = _currentState.UpdateState(Context);
+            _currentState?.UpdateState(Context);
+        }
 
-                // If nextKey differs from CurrentStateKey, we can auto-switch:
-                if (nextKey != null && nextKey != CurrentStateKey)
-                {
-                    ChangeState(nextKey);
-                }
-            }
+        // If you want to forcibly exit the current sub-state
+        public virtual void ExitCurrentState(TStateEnum toState = default)
+        {
+            _currentState?.ExitState(Context, toState);
         }
     }
 }

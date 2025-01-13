@@ -1,45 +1,44 @@
-using UnityEngine;
 using Jakkapat.StateMachine.Core;
 
 namespace Jakkapat.StateMachine.Example
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/PlayerApproach", fileName = "PlayerApproachState")]
-    public class PlayerApproachState : NestableScriptableState
+    public class PlayerApproachState
+        : NestableBaseState<BaseContext, StateIDs, BaseContext, StateIDs>
     {
-        [Header("StateKey to go if out-of-range (e.g. 'Roaming')")]
-        public StateKey roamingKey;
+        public override StateIDs ID => StateIDs.PlayerApproach;
 
-        public override StateKey OnEnter(BaseContext baseCtx, StateKey fromKey)
+        protected override StateMachine<BaseContext, StateIDs> CreateSubMachine(BaseContext parentContext)
         {
-            // 1) Call base to init subMachine
-            var result = base.OnEnter(baseCtx, fromKey);
+            var subMachine = new StateMachine<BaseContext, StateIDs>(parentContext);
 
-            // 2) If we have an NPCContext, stop movement, set hasApproached
-            if (baseCtx is NPCContext npc)
-            {
-                npc.StopMovement();
-                npc.HasApproached = true;
-            }
-            return result;
+            subMachine.AddState(new ApproachInitialSubState(subMachine));
+            subMachine.AddState(new ApproachSurpriseSubState(subMachine));
+            subMachine.AddState(new ApproachGreetingSubState(subMachine));
+            subMachine.AddState(new ApproachIdleSubState(subMachine));
+
+            return subMachine;
         }
 
-        public override StateKey OnUpdate(BaseContext baseCtx)
+        protected override void InitializeSubMachine(NPCContext parentContext)
         {
-            // 1) Let sub-machine run
-            var result = base.OnUpdate(baseCtx);
+            SubMachine.ChangeState(StateIDs.ApproachInitial);
+        }
 
-            // 2) If the user left range => go to roaming
-            if (baseCtx is NPCContext npc)
+        public override void EnterState(NPCContext context, StateIDs fromState)
+        {
+            context.StopMovement();
+            base.EnterState(context, fromState);
+        }
+
+        public override void UpdateState(NPCContext context)
+        {
+            if (!context.IsTargetInRange())
             {
-                if (!npc.IsTargetInRange())
-                {
-                    npc.HasApproached = false;
-                    return roamingKey;
-                }
+                context.HasApproached = false;
+                context.StateMachine.ChangeState(StateIDs.Roaming);
+                return;
             }
-
-            // stay in approach
-            return this.key;
+            base.UpdateState(context);
         }
     }
 }

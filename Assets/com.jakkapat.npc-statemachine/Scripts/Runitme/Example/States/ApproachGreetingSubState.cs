@@ -3,36 +3,36 @@ using Jakkapat.StateMachine.Core;
 
 namespace Jakkapat.StateMachine.Example
 {
-    [CreateAssetMenu(menuName = "Jakkapat/States/ApproachGreeting", fileName = "ApproachGreetingSubState")]
-    public class ApproachGreetingSubState : ScriptableState
+    public class ApproachGreetingSubState
+        : BaseState<NPCContext, StateIDs>
     {
-        [Tooltip("How long we greet before going idle?")]
-        public float greetingDuration = 2.0f;
+        public override StateIDs ID => StateIDs.ApproachGreeting;
 
-        public StateKey approachIdleKey;
-
+        private readonly StateMachine<NPCContext, StateIDs> _machine;
         private float _timer;
+        private float _greetingDuration = 2.0f;
 
-        public override StateKey OnEnter(BaseContext context, StateKey fromKey)
+        public ApproachGreetingSubState(StateMachine<NPCContext, StateIDs> machine)
         {
-            _timer = 0f;
-            if (context is NPCContext npc)
-            {
-                npc.RotateToFaceTarget();
-                npc.PlayGreetingAnimation();
-            }
-            return this.key;
+            _machine = machine;
         }
 
-        public override StateKey OnUpdate(BaseContext context)
+        public override void EnterState(NPCContext context, StateIDs fromState)
+        {
+            _timer = 0f;
+            context.RotateToFaceTarget();
+            context.PlayGreetingAnimation();
+        }
+
+        public override void UpdateState(NPCContext context)
         {
             _timer += Time.deltaTime;
-            if (_timer >= greetingDuration)
+            context.RotateToFaceTarget();
+
+            if (_timer >= _greetingDuration)
             {
-                // go approach idle
-                return approachIdleKey;
+                _machine.ChangeState(StateIDs.ApproachIdle);
             }
-            return this.key;
         }
     }
 }

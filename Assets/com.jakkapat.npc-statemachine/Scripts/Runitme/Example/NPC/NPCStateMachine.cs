@@ -7,66 +7,58 @@ namespace Jakkapat.StateMachine.Example
     [RequireComponent(typeof(CharacterController))]
     public class NPCStateMachine : MonoBehaviour
     {
-        [Header("Scriptable Approach")]
-        [SerializeField] private ScriptableStateMachine scriptableMachine;
-
-        [Header("References")]
         [SerializeField] private NavMeshAgent _agent;
-        [SerializeField] private AnimationController _animController;
         [SerializeField] private Transform _target;
 
-        [Header("NPC Settings")]
-        [SerializeField] private float _idleDuration = 2f;
-        [SerializeField] private float _turnSpeed = 3f;
+        [Header("Settings")]
         [SerializeField] private float _approachRange = 3f;
+        [SerializeField] private float _turnSpeed = 3f;
 
+        // We'll store the context and the machine
         private NPCContext _context;
+        private StateMachine<NPCContext> _machine;
 
-        void Awake()
+        private void Awake()
         {
             if (!_agent) _agent = GetComponent<NavMeshAgent>();
             if (!_target)
             {
-                var obj = GameObject.FindGameObjectWithTag("Player");
-                if (obj) _target = obj.transform;
+                var playerObj = GameObject.FindGameObjectWithTag("Player");
+                if (playerObj) _target = playerObj.transform;
             }
         }
 
-        void Start()
+        private void Start()
         {
-            // If you want a dynamic instance each time:
-            _context = ScriptableObject.CreateInstance<NPCContext>();
-            _context.agent = _agent;
-            _context.target = _target;
-            _context.AnimController = _animController;
-            _context.selfTransform = this.transform;
-
-            // apply your NPC settings
-            _context.turnSpeed = _turnSpeed;
-            _context.approachRange = _approachRange;
-            _context.idleDuration = _idleDuration;
-
-            // 3) Initialize the scriptable machine
-            if (scriptableMachine)
+            // Create the context
+            _context = new NPCContext
             {
-                scriptableMachine.Init(_context);
-            }
-            else
-            {
-                Debug.LogWarning("No ScriptableStateMachine assigned!");
-            }
+                Agent = _agent,
+                SelfTransform = transform,
+                Target = _target,
+                ApproachRange = _approachRange,
+                TurnSpeed = _turnSpeed
+            };
+
+            // The context has a .StateMachine property,
+            // but let's store a reference to it:
+            _machine = _context.StateMachine;
+
+            // Add top-level states like Idle, Roaming, etc. 
+            // For demonstration, let's just add PlayerApproach:
+            _machine.AddState(new PlayerApproachState<NPCContext>());
+
+            // Start in PlayerApproach or something else:
+            _machine.ChangeState(Core.StateIDs.PlayerApproach);
         }
 
-        void Update()
+        private void Update()
         {
-            // Let context do per-frame logic if you want
+            // Optionally let context do per-frame logic
             _context.UpdateContext();
 
-            // Update the scriptable machine
-            if (scriptableMachine)
-            {
-                scriptableMachine.Tick();
-            }
+            // Let the state machine update
+            _machine.Update();
         }
     }
 }
