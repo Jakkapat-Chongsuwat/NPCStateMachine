@@ -9,7 +9,6 @@ namespace Jakkapat.ToppuFSM.Core
     {
         protected StateMachine<TContext> subStateMachine;
 
-        // The default sub-state to enter upon OnEnter.
         private readonly IState<TContext> defaultSubState;
 
         /// <summary>
@@ -23,10 +22,9 @@ namespace Jakkapat.ToppuFSM.Core
         {
             this.defaultSubState = defaultSubState;
 
-            // The sub-state machine uses the same Context as the parent.
             subStateMachine = new StateMachine<TContext>(
                 parentStateMachine.Context,
-                null // We'll initialize it in OnEnter()
+                null
             );
         }
 
@@ -47,14 +45,11 @@ namespace Jakkapat.ToppuFSM.Core
         public override void OnUpdate()
         {
             base.OnUpdate();
-            // Each frame, update the nested sub-state machine
             subStateMachine.Update();
         }
 
         public override void OnExit()
         {
-            // If you want, you could forcibly call subStateMachine.CurrentState?.OnExit()
-            // or do subStateMachine.ChangeState(null) before leaving.
             base.OnExit();
         }
     }

@@ -6,7 +6,7 @@ namespace Jakkapat.ToppuFSM.Example
     public class GreetingState<TContext> : BaseState<TContext>
         where TContext : INpcContext
     {
-        private float greetingDuration = 3.0f;
+        private float greetingDuration = 5.5f;
 
         public GreetingState(StateMachine<TContext> parentSM) : base(parentSM) { }
 
@@ -37,6 +37,7 @@ namespace Jakkapat.ToppuFSM.Example
 
         public override void OnExit()
         {
+            Context.animationController?.ResetGreeting();
             Debug.Log("NPC: Exit GreetingState");
         }
     }

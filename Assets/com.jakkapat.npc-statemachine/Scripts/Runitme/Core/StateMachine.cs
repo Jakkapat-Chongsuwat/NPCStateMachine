@@ -30,12 +30,10 @@ namespace Jakkapat.ToppuFSM.Core
                 var t = transitions[i];
                 if (t.FromState == currentState && t.ShouldTransition(Context))
                 {
-                    // New: check if the current state can exit
                     if (currentState.CanExit())
                     {
                         ChangeState(t.ToState);
                     }
-                    // If not, we skip (or queue it) 
                     break;
                 }
             }
@@ -60,6 +58,28 @@ namespace Jakkapat.ToppuFSM.Core
         public void RemoveTransition(ITransition<TContext> transition)
         {
             transitions.Remove(transition);
+        }
+
+        public void AddTwoWayTransition(
+            IState<TContext> from,
+            IState<TContext> to,
+            System.Func<TContext, bool> forwardCondition,
+            System.Func<TContext, bool> reverseCondition
+        )
+        {
+            var forward = new Transition<TContext>(
+                fromState: from,
+                toState: to,
+                condition: forwardCondition
+            );
+            AddTransition(forward);
+
+            var reverse = new Transition<TContext>(
+                fromState: to,
+                toState: from,
+                condition: reverseCondition
+            );
+            AddTransition(reverse);
         }
     }
 }

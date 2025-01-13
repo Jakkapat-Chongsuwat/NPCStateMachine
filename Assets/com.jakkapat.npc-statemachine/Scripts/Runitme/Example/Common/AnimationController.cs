@@ -12,6 +12,7 @@ namespace Jakkapat.ToppuFSM.Example
         int _animIDMotionSpeed;
         int _animIDSurprise;
         int _animIDGreeting;
+        int _animIDStopSurprise;
 
         [SerializeField] private AudioClip[] footstepClips;
         [SerializeField] private AudioClip landingClip;
@@ -27,6 +28,7 @@ namespace Jakkapat.ToppuFSM.Example
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
             _animIDSurprise = Animator.StringToHash("Surprise");
+            _animIDStopSurprise = Animator.StringToHash("StopSurprise");
             _animIDGreeting = Animator.StringToHash("Greeting");
         }
 
@@ -60,9 +62,24 @@ namespace Jakkapat.ToppuFSM.Example
             if (_animator) SetTrigger(_animIDSurprise);
         }
 
+        public void ResetSurprise()
+        {
+            if (_animator) ResetTrigger(_animIDSurprise);
+        }
+
+        public void SetStopSurprise()
+        {
+            if (_animator) SetTrigger(_animIDStopSurprise);
+        }
+
         public void SetGreeting()
         {
             if (_animator) SetTrigger(_animIDGreeting);
+        }
+
+        public void ResetGreeting()
+        {
+            if (_animator) ResetTrigger(_animIDGreeting);
         }
 
         public void SetTrigger(int triggerId)
@@ -72,6 +89,11 @@ namespace Jakkapat.ToppuFSM.Example
                 _animator.ResetTrigger(triggerId);
                 _animator.SetTrigger(triggerId);
             }
+        }
+
+        public void ResetTrigger(int triggerId)
+        {
+            if (_animator) _animator.ResetTrigger(triggerId);
         }
 
         public void OnFootstep(AnimationEvent animEvent)

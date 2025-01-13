@@ -38,6 +38,7 @@ namespace Jakkapat.ToppuFSM.Example
 
         public override void OnExit()
         {
+            Context.animationController?.SetStopSurprise();
             Debug.Log("NPC: Exit SurpriseState");
         }
     }

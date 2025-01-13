@@ -14,6 +14,7 @@ namespace Jakkapat.ToppuFSM.Example
 
         public override void OnEnter()
         {
+            Debug.Log("NPC: Enter PatrolState");
             currentDestination = GetRandomNavMeshPoint(Context.NpcPosition, roamRange);
             SetAgentDestination(currentDestination);
             Context.animationController?.SetSpeed(0f);
@@ -40,7 +41,10 @@ namespace Jakkapat.ToppuFSM.Example
             }
         }
 
-        public override void OnExit() { }
+        public override void OnExit()
+        {
+            Debug.Log("NPC: Exit PatrolState");
+        }
 
         private void SetAgentDestination(Vector3 destination)
         {

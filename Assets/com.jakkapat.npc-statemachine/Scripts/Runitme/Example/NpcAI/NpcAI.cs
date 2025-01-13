@@ -22,7 +22,6 @@ namespace Jakkapat.ToppuFSM.Example
             {
                 animationController = GetComponent<AnimationController>(),
                 navMeshAgent = GetComponent<NavMeshAgent>(),
-
                 NpcTransform = this.transform
             };
 
@@ -30,7 +29,6 @@ namespace Jakkapat.ToppuFSM.Example
 
             var patrolState = new PatrolState<NpcContext>(fsm);
 
-            // sub-states
             var approachDecision = new ApproachDecisionState<NpcContext>(null);
             var surpriseState = new SurpriseState<NpcContext>(null);
             var turnToPlayer = new TurnToPlayerState<NpcContext>(null);
@@ -53,24 +51,26 @@ namespace Jakkapat.ToppuFSM.Example
 
             var playerApproachState = new PlayerApproachState<NpcContext>(
                 fsm,
-                approachDecision,
-                new IState<NpcContext>[] { approachDecision, surpriseState, turnToPlayer, greetingState, idleState },
-                subTransitions
+                defaultSubState: approachDecision,
+                allSubStates: new IState<NpcContext>[]
+                {
+                    approachDecision,
+                    surpriseState,
+                    turnToPlayer,
+                    greetingState,
+                    idleState
+                },
+                subTransitions: subTransitions
             );
 
             fsm.Initialize(patrolState);
 
-            fsm.AddTransition(new Transition<NpcContext>(
-                patrolState,
-                playerApproachState,
-                ctx => ctx.IsPlayerApproaching
-            ));
-
-            fsm.AddTransition(new Transition<NpcContext>(
-                playerApproachState,
-                patrolState,
-                ctx => !ctx.IsPlayerApproaching
-            ));
+            fsm.AddTwoWayTransition(
+                from: patrolState,
+                to: playerApproachState,
+                forwardCondition: ctx => ctx.IsPlayerApproaching,
+                reverseCondition: ctx => !ctx.IsPlayerApproaching
+            );
         }
 
         void Update()

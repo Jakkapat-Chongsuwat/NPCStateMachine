@@ -36,10 +36,13 @@ namespace Jakkapat.ToppuFSM.Example
 
         public override void OnExit()
         {
+            var activeSubState = subStateMachine.CurrentState;
+            activeSubState?.OnExit();
+            subStateMachine.ChangeState(null);
+
             Context.animationController?.SetSpeed(0f);
             Context.animationController?.SetMotionSpeed(0f);
 
-            Context.navMeshAgent?.SetDestination(Context.NpcPosition);
             Context.navMeshAgent.isStopped = false;
 
             base.OnExit();
